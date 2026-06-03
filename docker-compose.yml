@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16
+    container_name: optcg-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  importer:
+    build:
+      context: .
+      dockerfile: src/OPTCG.Tracker.Importer/Dockerfile
+    container_name: optcg-importer
+    # Gated behind a profile so `docker compose up` starts only the database.
+    # Run the import explicitly with: docker compose run --rm importer
+    profiles: ["import"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      OPTCG_BASE_URL: "https://optcgapi.com/"
+
+  # Optional UI for browsing the database during development.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: optcg-pgadmin
+    restart: unless-stopped
+    profiles: ["tools"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-8080}:80"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
