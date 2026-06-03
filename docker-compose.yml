@@ -31,6 +31,10 @@ services:
     environment:
       ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       OPTCG_BASE_URL: "https://optcgapi.com/"
+      IMAGE_OUTPUT_DIR: "/card-images"
+      IMAGE_BASE_URL: "${IMAGE_BASE_URL:-http://localhost:8081}"
+    volumes:
+      - ./card-images:/card-images
 
   # Optional UI for browsing the database during development.
   pgadmin:

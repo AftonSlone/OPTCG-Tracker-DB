@@ -32,7 +32,7 @@ public class TrackerDbContext : DbContext
             entity.Property(c => c.Attribute).HasMaxLength(50);
             entity.Property(c => c.SubTypes);
             entity.Property(c => c.CardText);
-            entity.Property(c => c.CardImageUrl);
+            entity.Property(c => c.CardImageUrl).HasMaxLength(255);
             entity.Property(c => c.CardImageId).HasMaxLength(100).IsRequired();
 
             // CardImageId is the true unique natural key (base + parallel printings differ here).

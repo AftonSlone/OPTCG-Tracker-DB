@@ -11,12 +11,14 @@ public class CardImportService
     private readonly OptcgApiClient _apiClient;
     private readonly TrackerDbContext _db;
     private readonly ILogger<CardImportService> _logger;
+    private readonly ImageDownloadService _imageDownloadService;
 
-    public CardImportService(OptcgApiClient apiClient, TrackerDbContext db, ILogger<CardImportService> logger)
+    public CardImportService(OptcgApiClient apiClient, TrackerDbContext db, ILogger<CardImportService> logger, ImageDownloadService imageDownloadService)
     {
         _apiClient = apiClient;
         _db = db;
         _logger = logger;
+        _imageDownloadService = imageDownloadService;
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -90,6 +92,9 @@ public class CardImportService
         var total = await _db.Cards.CountAsync(cancellationToken);
         _logger.LogInformation("Import complete. Inserted {Inserted}, updated {Updated}. Total cards: {Total}.",
             inserted, updated, total);
+
+        // Download images for cards that still have remote URLs
+        await _imageDownloadService.RunAsync(cancellationToken);
     }
 
     private static void ApplyDto(Card card, CardDto dto)

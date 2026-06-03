@@ -25,7 +25,14 @@ builder.Services.AddHttpClient<OptcgApiClient>(client =>
     client.DefaultRequestHeaders.UserAgent.ParseAdd("OPTCG-Tracker-Importer/1.0");
 });
 
+builder.Services.AddHttpClient<ImageDownloadService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("OPTCG-Tracker-Importer/1.0");
+});
+
 builder.Services.AddScoped<CardImportService>();
+builder.Services.AddScoped<ImageDownloadService>();
 
 using var host = builder.Build();
 

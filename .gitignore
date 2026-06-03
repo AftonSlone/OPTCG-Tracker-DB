@@ -11,6 +11,12 @@ obj/
 # Environment / secrets
 .env
 
+# Card images (local only, not committed)
+card-images/**/*.png
+card-images/**/*.jpg
+card-images/**/*.jpeg
+card-images/**/*.webp
+
 # OS
 Thumbs.db
 .DS_Store
