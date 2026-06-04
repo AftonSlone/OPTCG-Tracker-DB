@@ -10,6 +10,8 @@ public class TrackerDbContext : DbContext
     }
 
     public DbSet<Card> Cards => Set<Card>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<OAuthAccount> OAuthAccounts => Set<OAuthAccount>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +47,54 @@ public class TrackerDbContext : DbContext
             entity.HasIndex(c => c.CardColor);
             entity.HasIndex(c => c.Rarity);
             entity.HasIndex(c => c.SetId);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+
+            entity.HasKey(u => u.Id);
+
+            entity.Property(u => u.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(u => u.Email).HasMaxLength(255).IsRequired();
+            entity.Property(u => u.DisplayName).HasMaxLength(255).IsRequired();
+            entity.Property(u => u.CreatedAt).IsRequired();
+            entity.Property(u => u.UpdatedAt).IsRequired();
+
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.HasIndex(u => u.CreatedAt);
+        });
+
+        modelBuilder.Entity<OAuthAccount>(entity =>
+        {
+            entity.ToTable("oauth_accounts");
+
+            entity.HasKey(oa => oa.Id);
+
+            entity.Property(oa => oa.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(oa => oa.UserId).IsRequired();
+            entity.Property(oa => oa.Provider).IsRequired();
+            entity.Property(oa => oa.ProviderUserId).HasMaxLength(255).IsRequired();
+            entity.Property(oa => oa.ProviderEmail).HasMaxLength(255);
+            entity.Property(oa => oa.ProviderDisplayName).HasMaxLength(255);
+            entity.Property(oa => oa.ProviderAvatarUrl).HasMaxLength(500);
+            entity.Property(oa => oa.AccessTokenEncrypted);
+            entity.Property(oa => oa.RefreshTokenEncrypted);
+            entity.Property(oa => oa.TokenExpiresAt);
+            entity.Property(oa => oa.CreatedAt).IsRequired();
+            entity.Property(oa => oa.UpdatedAt).IsRequired();
+
+            entity.HasIndex(oa => new { oa.Provider, oa.ProviderUserId }).IsUnique();
+            entity.HasIndex(oa => oa.UserId);
+
+            entity.HasOne(oa => oa.User)
+                .WithMany(u => u.OAuthAccounts)
+                .HasForeignKey(oa => oa.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
